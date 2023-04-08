@@ -4,7 +4,7 @@ namespace PowerComponents\LivewirePowerGrid\Helpers;
 
 use Illuminate\Container\Container;
 use Illuminate\Pagination\{LengthAwarePaginator, Paginator};
-use Illuminate\Support\{Carbon, Collection as BaseCollection, Facades\Schema, Str};
+use Illuminate\Support\{Carbon, Collection as BaseCollection, Str};
 use PowerComponents\LivewirePowerGrid\Services\Contracts\CollectionFilterInterface;
 
 class Collection implements CollectionFilterInterface
@@ -142,6 +142,9 @@ class Collection implements CollectionFilterInterface
                     case 'input_text':
                         $this->filterInputText($field, $value);
 
+                    case 'contains_text':
+                        $this->filterContainsText($field, $value);
+
                         break;
                     case 'number':
                         $this->filterNumber($field, $value);
@@ -260,6 +263,15 @@ class Collection implements CollectionFilterInterface
 
                 break;
         }
+    }
+
+    public function filterContainsText(string $field, ?string $value): void
+    {
+        $this->query = $this->query->filter(function ($row) use ($field, $value) {
+            $row     = (object) $row;
+
+            return false !== stristr($row->{$field}, strtolower((string) $value));
+        });
     }
 
     public function filterBoolean(string $field, string $value): void

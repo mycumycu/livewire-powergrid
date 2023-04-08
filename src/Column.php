@@ -30,6 +30,8 @@ final class Column
 
     public array $editable = [];
 
+    public bool $handledExternally = false;
+
     public bool $searchable = false;
 
     public string $searchableRaw = '';
@@ -149,6 +151,18 @@ final class Column
     public function sortable(): Column
     {
         $this->sortable = true;
+
+        return $this;
+    }
+
+    /**
+     * This column filtering/searching will be handled externally
+     *
+     * @return Column
+     */
+    public function handledExternally(): Column
+    {
+        $this->handledExternally = true;
 
         return $this;
     }
@@ -436,6 +450,19 @@ final class Column
     public function makeInputText(string $dataField = ''): Column
     {
         $this->inputs['input_text']['enabled'] = true;
+        if (filled($dataField)) {
+            $this->dataField = $dataField;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add Like Text
+     */
+    public function makeContainsText(string $dataField = ''): Column
+    {
+        $this->inputs['contains_text']['enabled'] = true;
         if (filled($dataField)) {
             $this->dataField = $dataField;
         }

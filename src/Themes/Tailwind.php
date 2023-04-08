@@ -8,6 +8,7 @@ use PowerComponents\LivewirePowerGrid\Themes\Components\{Actions,
     Cols,
     Editable,
     FilterBoolean,
+    FilterContainsText,
     FilterDatePicker,
     FilterInputText,
     FilterMultiSelect,
@@ -121,6 +122,14 @@ class Tailwind extends ThemeBase
             ->view($this->root() . '.filters.input-text')
             ->base('min-w-[9.5rem]')
             ->select('appearance-none block bg-white border border-slate-300 text-slate-700 py-2 px-3 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-slate-500 w-full active dark:bg-slate-600 dark:text-slate-200 dark:placeholder-slate-200 dark:border-slate-500')
+            ->input('w-full block bg-white text-slate-700 border border-slate-300 rounded py-2 px-3 leading-tight focus:outline-none focus:bg-white focus:border-slate-500 dark:bg-slate-600 dark:text-slate-200 dark:placeholder-slate-200 dark:border-slate-500');
+    }
+
+    public function filterContainsText(): FilterContainsText
+    {
+        return Theme::filterContainsText()
+            ->view($this->root() . '.filters.input-contains')
+            ->base('min-w-[9.5rem]')
             ->input('w-full block bg-white text-slate-700 border border-slate-300 rounded py-2 px-3 leading-tight focus:outline-none focus:bg-white focus:border-slate-500 dark:bg-slate-600 dark:text-slate-200 dark:placeholder-slate-200 dark:border-slate-500');
     }
 }

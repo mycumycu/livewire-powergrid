@@ -78,6 +78,17 @@
                                 ])
                             @endif
                         @endforeach
+                        @foreach(data_get($makeFilters, 'contains_text', []) as $index => $containsText)
+                            @if(data_get($containsText, 'field') === $column->field)
+                                @includeIf($theme->filterContainsText->view, [
+                                     'inline'           => true,
+                                     'enabledFilters'   => $enabledFilters,
+                                     'inputTextOptions' => $inputTextOptions,
+                                     'enabledFilters'   => $enabledFilters,
+                                     'theme'            => $theme->filterContainsText,
+                                ])
+                            @endif
+                        @endforeach
                         @foreach(data_get($makeFilters, 'boolean', []) as $index => $booleanFilter)
                             @if(data_get($booleanFilter, 'field') === $column->field)
                                 @includeIf($theme->filterBoolean->view, [

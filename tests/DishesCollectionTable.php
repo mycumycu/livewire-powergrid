@@ -3,16 +3,8 @@
 namespace PowerComponents\LivewirePowerGrid\Tests;
 
 use Illuminate\Support\{Carbon, Collection};
+use PowerComponents\LivewirePowerGrid\{Button, Column, Exportable, Footer, Header, PowerGrid, PowerGridComponent, PowerGridEloquent};
 use PowerComponents\LivewirePowerGrid\Traits\ActionButton;
-use PowerComponents\LivewirePowerGrid\{Button,
-    Column,
-    Exportable,
-    Footer,
-    Header,
-    PowerGrid,
-    PowerGridComponent,
-    PowerGridEloquent,
-    Rules\Rule};
 
 class DishesCollectionTable extends PowerGridComponent
 {
@@ -35,7 +27,7 @@ class DishesCollectionTable extends PowerGridComponent
         $this->eventId = $params;
     }
 
-    public function datasource(): Collection
+    public function datasource(array $filters = [], string $search = ''): Collection
     {
         return collect([
             [

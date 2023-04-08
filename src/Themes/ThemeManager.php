@@ -8,6 +8,7 @@ use PowerComponents\LivewirePowerGrid\Themes\Components\{Actions,
     Cols,
     Editable,
     FilterBoolean,
+    FilterContainsText,
     FilterDatePicker,
     FilterInputText,
     FilterMultiSelect,
@@ -93,5 +94,10 @@ class ThemeManager
     public function filterInputText(): FilterInputText
     {
         return new FilterInputText();
+    }
+
+    public function filterContainsText(): FilterContainsText
+    {
+        return new FilterContainsText();
     }
 }

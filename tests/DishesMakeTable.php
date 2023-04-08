@@ -5,16 +5,9 @@ namespace PowerComponents\LivewirePowerGrid\Tests;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use NumberFormatter;
+use PowerComponents\LivewirePowerGrid\{Button, Column, Exportable, Footer, Header, PowerGrid, PowerGridComponent, PowerGridEloquent};
 use PowerComponents\LivewirePowerGrid\Tests\Models\{Category, Dish};
 use PowerComponents\LivewirePowerGrid\Traits\ActionButton;
-use PowerComponents\LivewirePowerGrid\{Button,
-    Column,
-    Exportable,
-    Footer,
-    Header,
-    PowerGrid,
-    PowerGridComponent,
-    PowerGridEloquent};
 
 class DishesMakeTable extends PowerGridComponent
 {
@@ -61,7 +54,7 @@ class DishesMakeTable extends PowerGridComponent
         ];
     }
 
-    public function datasource(): Builder
+    public function datasource(array $filters = [], string $search = ''): Builder
     {
         return Dish::with('category');
     }

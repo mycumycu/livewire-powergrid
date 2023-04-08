@@ -8,6 +8,7 @@ use PowerComponents\LivewirePowerGrid\Themes\Components\{Actions,
     Cols,
     Editable,
     FilterBoolean,
+    FilterContainsText,
     FilterDatePicker,
     FilterInputText,
     FilterMultiSelect,
@@ -46,6 +47,8 @@ abstract class AbstractTheme
     public FilterNumber $filterNumber;
 
     public FilterInputText $filterInputText;
+
+    public FilterContainsText $filterContainsText;
 
     public Footer $footer;
 
@@ -124,5 +127,10 @@ abstract class AbstractTheme
     public function filterInputText(): FilterInputText
     {
         return Theme::filterInputText();
+    }
+
+    public function filterContainsText(): FilterContainsText
+    {
+        return Theme::filterContainsText();
     }
 }

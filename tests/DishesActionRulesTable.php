@@ -3,19 +3,9 @@
 namespace PowerComponents\LivewirePowerGrid\Tests;
 
 use Illuminate\Database\Eloquent\Builder;
+use PowerComponents\LivewirePowerGrid\{Button, Column, Footer, Header, PowerGrid, PowerGridComponent, PowerGridEloquent, Rules\Rule};
 use PowerComponents\LivewirePowerGrid\Tests\Models\Dish;
 use PowerComponents\LivewirePowerGrid\Traits\ActionButton;
-use PowerComponents\LivewirePowerGrid\{Button,
-    Column,
-    Detail,
-    Exportable,
-    Footer,
-    Header,
-    PowerGrid,
-    PowerGridComponent,
-    PowerGridEloquent,
-    Rules\Rule
-};
 
 class DishesActionRulesTable extends PowerGridComponent
 {
@@ -59,7 +49,7 @@ class DishesActionRulesTable extends PowerGridComponent
         ];
     }
 
-    public function datasource(): Builder
+    public function datasource(array $filters = [], string $search = ''): Builder
     {
         if ($this->join) {
             return $this->join();

@@ -2,6 +2,8 @@
 
 namespace PowerComponents\LivewirePowerGrid;
 
+use Arr;
+use Closure;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -14,14 +16,7 @@ use Illuminate\Support as Support;
 use Livewire\{Component, WithPagination};
 use PowerComponents\LivewirePowerGrid\Helpers\{ActionRules, Collection, Model, SqlSupport};
 use PowerComponents\LivewirePowerGrid\Themes\ThemeBase;
-use PowerComponents\LivewirePowerGrid\Traits\{BatchableExport,
-    Checkbox,
-    Exportable,
-    Filter,
-    Listeners,
-    PersistData,
-    WithSorting
-};
+use PowerComponents\LivewirePowerGrid\Traits\{BatchableExport, Checkbox, Exportable, Filter, Listeners, PersistData, WithSorting};
 use Throwable;
 
 class PowerGridComponent extends Component
@@ -75,6 +70,8 @@ class PowerGridComponent extends Component
     protected ThemeBase $powerGridTheme;
 
     public int $total = 0;
+
+    protected ?Closure $postFilterCallback = null;
 
     public int $totalCurrentPage = 0;
 
@@ -196,81 +193,20 @@ class PowerGridComponent extends Component
     public function fillData(): mixed
     {
         /** @var Eloquent\Builder|Support\Collection|Eloquent\Collection $datasource */
-        $datasource = (!empty($this->datasource)) ? $this->datasource : $this->datasource();
+        $datasource = (!empty($this->datasource)) ? $this->datasource : $this->datasource($this->filters, $this->search);
 
         /** @phpstan-ignore-next-line */
-        if (is_array($this->datasource())) {
+        if (is_array($datasource)) {
             /** @phpstan-ignore-next-line */
-            $datasource = collect($this->datasource());
+            $datasource = collect($this->datasource);
         }
-
         $this->isCollection = is_a((object) $datasource, Support\Collection::class);
-
         if ($this->isCollection) {
-            cache()->forget($this->id);
-            $filters = Collection::query($this->resolveCollection($datasource))
-                ->setColumns($this->columns)
-                ->setSearch($this->search)
-                ->setFilters($this->filters)
-                ->filterContains()
-                ->filter();
-
-            $results = $this->applySorting($filters);
-
-            if ($this->headerTotalColumn || $this->footerTotalColumn) {
-                $this->withoutPaginatedData = $results->values()
-                    ->map(fn ($item) => (array) $item);
-            }
-
-            if ($results->count()) {
-                $this->filtered = $results->pluck($this->primaryKey)->toArray();
-
-                $paginated = Collection::paginate($results, intval(data_get($this->setUp, 'footer.perPage')));
-                $results   = $paginated->setCollection($this->transform($paginated->getCollection()));
-            }
-
-            self::resolveDetailRow($results);
-
-            return $results;
+            return $this->fillCollection($datasource);
         }
 
         /** @phpstan-ignore-next-line */
-        $this->currentTable = $datasource->getModel()->getTable();
-
-        $sortField = Support\Str::of($this->sortField)->contains('.') || $this->ignoreTablePrefix
-            ? $this->sortField : $this->currentTable . '.' . $this->sortField;
-
-        /** @var Eloquent\Builder $results */
-        $results = $this->resolveModel($datasource)
-            ->where(function (Eloquent\Builder $query) {
-                Model::query($query)
-                    ->setInputRangeConfig($this->inputRangeConfig)
-                    ->setColumns($this->columns)
-                    ->setSearch($this->search)
-                    ->setRelationSearch($this->relationSearch)
-                    ->setFilters($this->filters)
-                    ->filterContains()
-                    ->filter();
-            });
-
-        $results = self::applySoftDeletes($results);
-
-        $results = self::applyWithSortStringNumber($results, $sortField);
-
-        $results = $results->orderBy($sortField, $this->sortDirection);
-
-        self::applyTotalColumn($results);
-
-        $results = self::applyPerPage($results);
-
-        self::resolveDetailRow($results);
-
-        if (method_exists($results, 'total')) {
-            $this->total = $results->total();
-        }
-
-        /** @phpstan-ignore-next-line  */
-        return $results->setCollection($this->transform($results->getCollection()));
+        return $this->fillEloquent($datasource);
     }
 
     private function applyTotalColumn(Eloquent\Builder $results): void
@@ -342,7 +278,7 @@ class PowerGridComponent extends Component
     /**
      * @return null
      */
-    public function datasource()
+    public function datasource(array $filters = [], string $search = '')
     {
         return null;
     }
@@ -520,5 +456,108 @@ class PowerGridComponent extends Component
             'pg:eventRefresh-' . $this->tableName => 'refresh',
             'pg:softDeletes-' . $this->tableName  => 'softDeletes',
         ];
+    }
+
+    /**
+     * @param Eloquent\Collection|Eloquent\Builder|Support\Collection $datasource
+     *
+     * @return \Illuminate\Pagination\LengthAwarePaginator|Support\Collection
+     * @throws Exception
+     */
+    private function fillCollection(Eloquent\Collection|Eloquent\Builder|Support\Collection $datasource): Support\Collection|\Illuminate\Pagination\LengthAwarePaginator
+    {
+        cache()->forget($this->id);
+        $filters = Collection::query($this->resolveCollection($datasource))
+                             ->setColumns($this->columns)
+                             ->setSearch($this->search)
+                             ->setFilters($this->excludeExternalFilters())
+                             ->filterContains()
+                             ->filter();
+
+        $results = $this->applySorting($filters);
+
+        if ($this->headerTotalColumn || $this->footerTotalColumn) {
+            $this->withoutPaginatedData = $results->values()
+                                                  ->map(fn($item) => (array)$item);
+        }
+
+        if ($results->count()) {
+            $this->filtered = $results->pluck($this->primaryKey)->toArray();
+
+            $paginated = Collection::paginate($results, intval(data_get($this->setUp, 'footer.perPage')));
+            $results   = $paginated->setCollection($this->transform($paginated->getCollection()));
+        }
+
+        self::resolveDetailRow($results);
+
+        return $results;
+    }
+
+    /**
+     * @param Eloquent\Collection|Eloquent\Builder|Support\Collection $datasource
+     *
+     * @return LengthAwarePaginator|Paginator
+     * @throws Throwable
+     */
+    private function fillEloquent(Eloquent\Collection|Eloquent\Builder|Support\Collection $datasource): LengthAwarePaginator|Paginator
+    {
+        $this->currentTable = $datasource->getModel()->getTable();
+
+        $sortField = Support\Str::of($this->sortField)->contains('.') || $this->ignoreTablePrefix
+            ? $this->sortField : $this->currentTable . '.' . $this->sortField;
+
+        /** @var Eloquent\Builder $results */
+        $results = $this->resolveModel($datasource)
+                        ->orWhere(function (Eloquent\Builder $query) {
+                            Model::query($query)
+                                 ->setInputRangeConfig($this->inputRangeConfig)
+                                 ->setColumns($this->columns)
+                                 ->setSearch($this->search)
+                                 ->setRelationSearch($this->relationSearch)
+                                 ->setFilters($this->excludeExternalFilters())
+                                 ->filterContains()
+                                 ->filter();
+                        });
+
+        $results = self::applySoftDeletes($results);
+
+        $results = self::applyWithSortStringNumber($results, $sortField);
+
+        $results = $results->orderBy($sortField, $this->sortDirection);
+
+        self::applyTotalColumn($results);
+
+        $results = self::applyPerPage($results);
+
+        self::resolveDetailRow($results);
+
+        if (method_exists($results, 'total')) {
+            $this->total = $results->total();
+        }
+
+        /** @phpstan-ignore-next-line */
+        $resultCollection = $results->getCollection();
+        $resultCollection = !is_null($this->postFilterCallback) ? ($this->postFilterCallback)($resultCollection) : $resultCollection;
+
+        return $results->setCollection($this->transform($resultCollection));
+    }
+
+    /**
+     * Get filters without the ones handled externally
+     *
+     * @return array
+     */
+    private function excludeExternalFilters(): array
+    {
+        $cleanFilters = $this->filters;
+
+        collect($this->columns())->each(function (Column $column) use (&$cleanFilters) {
+            if ($column->handledExternally) {
+                data_set($cleanFilters,'*.'.$column->dataField, null);
+                Arr::forget($cleanFilters,'contains_text.'.$column->dataField);
+            }
+        });
+
+        return array_map('array_filter', $cleanFilters);
     }
 }

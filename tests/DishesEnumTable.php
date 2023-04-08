@@ -3,19 +3,10 @@
 namespace PowerComponents\LivewirePowerGrid\Tests;
 
 use Illuminate\Database\Eloquent\Builder;
+use PowerComponents\LivewirePowerGrid\{Column, Exportable, Footer, Header, PowerGrid, PowerGridComponent, PowerGridEloquent, Services\ExportOption};
 use PowerComponents\LivewirePowerGrid\Tests\Enums\Diet;
-use PowerComponents\LivewirePowerGrid\Tests\Models\{Category, Dish};
+use PowerComponents\LivewirePowerGrid\Tests\Models\{Dish};
 use PowerComponents\LivewirePowerGrid\Traits\ActionButton;
-use PowerComponents\LivewirePowerGrid\{Button,
-    Column,
-    Exportable,
-    Footer,
-    Header,
-    PowerGrid,
-    PowerGridComponent,
-    PowerGridEloquent,
-    Rules\Rule,
-    Services\ExportOption};
 
 class DishesEnumTable extends PowerGridComponent
 {
@@ -62,7 +53,7 @@ class DishesEnumTable extends PowerGridComponent
         ];
     }
 
-    public function datasource(): Builder
+    public function datasource(array $filters = [], string $search = ''): Builder
     {
         return Dish::with('category');
     }

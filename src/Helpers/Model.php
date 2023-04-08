@@ -3,7 +3,7 @@
 namespace PowerComponents\LivewirePowerGrid\Helpers;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\{Cache,Schema};
+use Illuminate\Support\Facades\{Cache, Schema};
 use Illuminate\Support\{Carbon, Str};
 use PowerComponents\LivewirePowerGrid\Column;
 use PowerComponents\LivewirePowerGrid\Services\Contracts\ModelFilterInterface;
@@ -92,6 +92,11 @@ class Model implements ModelFilterInterface
                             break;
                         case 'input_text':
                             $this->filterInputText($query, $field, $value);
+
+                            break;
+
+                        case 'contains_text':
+                            $this->filterContainsText($query, $field, $value);
 
                             break;
                         case 'number':
@@ -229,6 +234,16 @@ class Model implements ModelFilterInterface
         }
     }
 
+    public function filterContainsText(Builder $query, string $field, string|array|null $value): void
+    {
+        if (is_array($value)) {
+            $field = $field . '.' . key($value);
+            $value = $value[key($value)];
+        }
+
+        $query->where($field, SqlSupport::like($query), '%' . $value . '%');
+    }
+
     /**
      * @param string[] $value
      */
@@ -279,11 +294,12 @@ class Model implements ModelFilterInterface
 
                 /** @var Column $column */
                 foreach ($this->columns as $column) {
-                    $searchable = strval(data_get($column, 'searchable'));
-                    $table      = $modelTable;
-                    $field      = strval(data_get($column, 'dataField')) ?: strval(data_get($column, 'field'));
+                    $searchable        = boolval(data_get($column, 'searchable'));
+                    $handledExternally = boolval(data_get($column, 'handledExternally'));
+                    $table             = $modelTable;
+                    $field             = strval(data_get($column, 'dataField')) ?: strval(data_get($column, 'field'));
 
-                    if ($searchable && $field) {
+                    if ($searchable && !$handledExternally && $field) {
                         if (str_contains($field, '.')) {
                             $explodeField = Str::of($field)->explode('.');
                             /** @var string $table */

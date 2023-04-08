@@ -33,21 +33,22 @@ class ThemeBase extends AbstractTheme
 
     public function apply(): ThemeBase
     {
-        $this->table             = $this->table();
-        $this->footer            = $this->footer();
-        $this->cols              = $this->cols();
-        $this->editable          = $this->editable();
-        $this->clickToCopy       = $this->clickToCopy();
-        $this->layout            = $this->layout();
-        $this->toggleable        = $this->toggleable();
-        $this->actions           = $this->actions();
-        $this->checkbox          = $this->checkbox();
-        $this->filterBoolean     = $this->filterBoolean();
-        $this->filterDatePicker  = $this->filterDatePicker();
-        $this->filterMultiSelect = $this->filterMultiSelect();
-        $this->filterNumber      = $this->filterNumber();
-        $this->filterSelect      = $this->filterSelect();
-        $this->filterInputText   = $this->filterInputText();
+        $this->table              = $this->table();
+        $this->footer             = $this->footer();
+        $this->cols               = $this->cols();
+        $this->editable           = $this->editable();
+        $this->clickToCopy        = $this->clickToCopy();
+        $this->layout             = $this->layout();
+        $this->toggleable         = $this->toggleable();
+        $this->actions            = $this->actions();
+        $this->checkbox           = $this->checkbox();
+        $this->filterBoolean      = $this->filterBoolean();
+        $this->filterDatePicker   = $this->filterDatePicker();
+        $this->filterMultiSelect  = $this->filterMultiSelect();
+        $this->filterNumber       = $this->filterNumber();
+        $this->filterSelect       = $this->filterSelect();
+        $this->filterInputText    = $this->filterInputText();
+        $this->filterContainsText = $this->filterContainsText();
 
         return $this;
     }

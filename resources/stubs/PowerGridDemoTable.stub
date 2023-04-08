@@ -16,17 +16,9 @@ namespace App\Http\Livewire;
 use App\Models\User;
 use Faker\Factory as FakerFactory;
 use Illuminate\Support\{Carbon, Collection};
+use PowerComponents\LivewirePowerGrid\{Button, Column, Exportable, Footer, Header, PowerGrid, PowerGridComponent, PowerGridEloquent, Rules\RuleActions};
 use PowerComponents\LivewirePowerGrid\Rules\Rule;
 use PowerComponents\LivewirePowerGrid\Traits\ActionButton;
-use PowerComponents\LivewirePowerGrid\{Button,
-    Column,
-    Exportable,
-    Footer,
-    Header,
-    PowerGrid,
-    PowerGridComponent,
-    PowerGridEloquent,
-    Rules\RuleActions};
 
 final class PowerGridDemoTable extends PowerGridComponent
 {
@@ -111,7 +103,7 @@ final class PowerGridDemoTable extends PowerGridComponent
     * PowerGrid datasource.
     *
     */
-    public function datasource(): Collection
+    public function datasource(array $filters = [], string $search = ''): Collection
     {
         return $this->demoUsers(); //Get demo users. Should be removed in a real project.
         //return User::query();

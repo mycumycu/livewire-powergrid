@@ -3,15 +3,8 @@
 namespace PowerComponents\LivewirePowerGrid\Tests;
 
 use Illuminate\Support\{Carbon};
+use PowerComponents\LivewirePowerGrid\{Button, Column, Exportable, Footer, Header, PowerGrid, PowerGridComponent, PowerGridEloquent};
 use PowerComponents\LivewirePowerGrid\Traits\ActionButton;
-use PowerComponents\LivewirePowerGrid\{Button,
-    Column,
-    Exportable,
-    Footer,
-    Header,
-    PowerGrid,
-    PowerGridComponent,
-    PowerGridEloquent};
 
 class DishesArrayTable extends PowerGridComponent
 {
@@ -34,7 +27,7 @@ class DishesArrayTable extends PowerGridComponent
         $this->eventId = $params;
     }
 
-    public function datasource(): array
+    public function datasource(array $filters = [], string $search = ''): array
     {
         return [
             [

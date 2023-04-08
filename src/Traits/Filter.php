@@ -33,6 +33,7 @@ trait Filter
 
             unset($this->filters['input_text'][$table][$column]);
             unset($this->filters['input_text_options'][$table][$column]);
+            unset($this->filters['contains_text'][$table][$column]);
             unset($this->filters['number'][$table][$column]['start']);
             unset($this->filters['number'][$table][$column]['end']);
             unset($this->filters['boolean'][$table][$column]);
@@ -43,6 +44,7 @@ trait Filter
 
             unset($this->filters['input_text'][$table . '.' . $column]);
             unset($this->filters['input_text_options'][$table . '.' . $column]);
+            unset($this->filters['contains_text'][$table . '.' . $column]);
             unset($this->filters['number'][$table . '.' . $column]['start']);
             unset($this->filters['number'][$table . '.' . $column]['end']);
             unset($this->filters['boolean'][$table . '.' . $column]);
@@ -56,6 +58,9 @@ trait Filter
             }
             if (empty($this->filters['input_text_options'][$table])) {
                 unset($this->filters['input_text_options'][$table]);
+            }
+            if (empty($this->filters['contains_text'][$table])) {
+                unset($this->filters['contains_text'][$table]);
             }
             if (empty($this->filters['number_start'][$table])) {
                 unset($this->filters['number_start'][$table]);
@@ -89,6 +94,7 @@ trait Filter
 
             unset($this->filters['input_text'][$field]);
             unset($this->filters['input_text_options'][$field]);
+            unset($this->filters['contains_text'][$field]);
             unset($this->filters['number'][$field]['start']);
             unset($this->filters['number'][$field]['end']);
             unset($this->filters['boolean'][$field]);
@@ -286,6 +292,20 @@ trait Filter
     }
 
     public function filterInputText(string $field, string $value, string $label): void
+    {
+        $this->resetPage();
+
+        $this->enabledFilters[$field]['id']          = $field;
+        $this->enabledFilters[$field]['label']       = $label;
+
+        if ($value == '') {
+            $this->clearFilter($field);
+        }
+
+        $this->persistState('filters');
+    }
+
+    public function filterContainsText(string $field, string $value, string $label): void
     {
         $this->resetPage();
 
