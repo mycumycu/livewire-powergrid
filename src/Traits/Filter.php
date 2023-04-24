@@ -11,6 +11,7 @@ trait Filter
     public Collection $makeFilters;
 
     public array $filters = [];
+    public array $filtersHandledExternally = [];
 
     public array $enabledFilters = [];
 
@@ -31,9 +32,9 @@ trait Filter
                 $this->dispatchBrowserEvent('pg:clear_flatpickr::' . $this->tableName . ':' . $field);
             }
 
+            unset($this->filtersHandledExternally['contains_text'][$table][$column]);
             unset($this->filters['input_text'][$table][$column]);
             unset($this->filters['input_text_options'][$table][$column]);
-            unset($this->filters['contains_text'][$table][$column]);
             unset($this->filters['number'][$table][$column]['start']);
             unset($this->filters['number'][$table][$column]['end']);
             unset($this->filters['boolean'][$table][$column]);
@@ -42,9 +43,9 @@ trait Filter
             unset($this->filters['select'][$table][$column]);
             unset($this->filters['multi_select'][$table][$column]);
 
+            unset($this->filtersHandledExternally['contains_text'][$table . '.' . $column]);
             unset($this->filters['input_text'][$table . '.' . $column]);
             unset($this->filters['input_text_options'][$table . '.' . $column]);
-            unset($this->filters['contains_text'][$table . '.' . $column]);
             unset($this->filters['number'][$table . '.' . $column]['start']);
             unset($this->filters['number'][$table . '.' . $column]['end']);
             unset($this->filters['boolean'][$table . '.' . $column]);
@@ -53,14 +54,14 @@ trait Filter
             unset($this->filters['select'][$table . '.' . $column]);
             unset($this->filters['multi_select'][$table . '.' . $column]);
 
+            if (empty($this->filtersHandledExternally['contains_text'][$table])) {
+                unset($this->filtersHandledExternally['contains_text'][$table]);
+            }
             if (empty($this->filters['input_text'][$table])) {
                 unset($this->filters['input_text'][$table]);
             }
             if (empty($this->filters['input_text_options'][$table])) {
                 unset($this->filters['input_text_options'][$table]);
-            }
-            if (empty($this->filters['contains_text'][$table])) {
-                unset($this->filters['contains_text'][$table]);
             }
             if (empty($this->filters['number_start'][$table])) {
                 unset($this->filters['number_start'][$table]);
@@ -92,9 +93,9 @@ trait Filter
                 $this->dispatchBrowserEvent('pg:clear_flatpickr::' . $this->tableName . ':' . $field);
             }
 
+            unset($this->filtersHandledExternally['contains_text'][$field]);
             unset($this->filters['input_text'][$field]);
             unset($this->filters['input_text_options'][$field]);
-            unset($this->filters['contains_text'][$field]);
             unset($this->filters['number'][$field]['start']);
             unset($this->filters['number'][$field]['end']);
             unset($this->filters['boolean'][$field]);
@@ -112,6 +113,7 @@ trait Filter
     public function clearAllFilters(): void
     {
         $this->enabledFilters = [];
+        $this->filtersHandledExternally        = [];
         $this->filters        = [];
 
         $this->persistState('filters');
@@ -308,6 +310,8 @@ trait Filter
     public function filterContainsText(string $field, string $value, string $label): void
     {
         $this->resetPage();
+
+        data_set($this->filtersHandledExternally, 'contains_text.'.$field, $value);
 
         $this->enabledFilters[$field]['id']          = $field;
         $this->enabledFilters[$field]['label']       = $label;

@@ -193,7 +193,10 @@ class PowerGridComponent extends Component
     public function fillData(): mixed
     {
         /** @var Eloquent\Builder|Support\Collection|Eloquent\Collection $datasource */
-        $datasource = (!empty($this->datasource)) ? $this->datasource : $this->datasource($this->filters, $this->search);
+        $datasource = (!empty($this->datasource)) ? $this->datasource : $this->datasource(
+            $this->filtersHandledExternally,
+            $this->search
+        );
 
         /** @phpstan-ignore-next-line */
         if (is_array($datasource)) {
@@ -470,7 +473,7 @@ class PowerGridComponent extends Component
         $filters = Collection::query($this->resolveCollection($datasource))
                              ->setColumns($this->columns)
                              ->setSearch($this->search)
-                             ->setFilters($this->excludeExternalFilters())
+                             ->setFilters($this->filters)
                              ->filterContains()
                              ->filter();
 
@@ -508,13 +511,13 @@ class PowerGridComponent extends Component
 
         /** @var Eloquent\Builder $results */
         $results = $this->resolveModel($datasource)
-                        ->orWhere(function (Eloquent\Builder $query) {
+                        ->where(function (Eloquent\Builder $query) {
                             Model::query($query)
                                  ->setInputRangeConfig($this->inputRangeConfig)
                                  ->setColumns($this->columns)
                                  ->setSearch($this->search)
                                  ->setRelationSearch($this->relationSearch)
-                                 ->setFilters($this->excludeExternalFilters())
+                                 ->setFilters($this->filters)
                                  ->filterContains()
                                  ->filter();
                         });
@@ -540,24 +543,5 @@ class PowerGridComponent extends Component
         $resultCollection = !is_null($this->postFilterCallback) ? ($this->postFilterCallback)($resultCollection) : $resultCollection;
 
         return $results->setCollection($this->transform($resultCollection));
-    }
-
-    /**
-     * Get filters without the ones handled externally
-     *
-     * @return array
-     */
-    private function excludeExternalFilters(): array
-    {
-        $cleanFilters = $this->filters;
-
-        collect($this->columns())->each(function (Column $column) use (&$cleanFilters) {
-            if ($column->handledExternally) {
-                data_set($cleanFilters,'*.'.$column->dataField, null);
-                Arr::forget($cleanFilters,'contains_text.'.$column->dataField);
-            }
-        });
-
-        return array_map('array_filter', $cleanFilters);
     }
 }

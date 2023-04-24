@@ -30,7 +30,7 @@
                     <input
                         data-id="{{ $field }}"
                         @if(isset($enabledFilters[$field]['disabled']) && boolval($enabledFilters[$field]['disabled']) === true) disabled @else
-                            wire:model.debounce.800ms="filters.contains_text.{{ $field  }}"
+                            wire:model.debounce.800ms="filtersHandledExternally.{{ $field  }}"
                         wire:input.debounce.800ms="filterContainsText('{{ $field }}', $event.target.value, '{{ data_get($containsText, 'label') }}')"
                         @endif
                         type="search"
