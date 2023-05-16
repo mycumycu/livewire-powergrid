@@ -71,7 +71,8 @@ class PowerGridComponent extends Component
 
     public int $total = 0;
 
-    protected ?Closure $postFilterCallback = null;
+    protected ?Closure $eloquentPostFilterCallback = null;
+    protected ?Closure $preRenderCallback = null;
 
     public int $totalCurrentPage = 0;
 
@@ -491,6 +492,8 @@ class PowerGridComponent extends Component
             $results   = $paginated->setCollection($this->transform($paginated->getCollection()));
         }
 
+        $results = !is_null($this->preRenderCallback) ? ($this->preRenderCallback)($results) : $results;
+
         self::resolveDetailRow($results);
 
         return $results;
@@ -522,6 +525,8 @@ class PowerGridComponent extends Component
                                  ->filter();
                         });
 
+        $results = !is_null($this->eloquentPostFilterCallback) ? ($this->eloquentPostFilterCallback)($results) : $results;
+
         $results = self::applySoftDeletes($results);
 
         $results = self::applyWithSortStringNumber($results, $sortField);
@@ -540,7 +545,7 @@ class PowerGridComponent extends Component
 
         /** @phpstan-ignore-next-line */
         $resultCollection = $results->getCollection();
-        $resultCollection = !is_null($this->postFilterCallback) ? ($this->postFilterCallback)($resultCollection) : $resultCollection;
+        $resultCollection = !is_null($this->preRenderCallback) ? ($this->preRenderCallback)($resultCollection) : $resultCollection;
 
         return $results->setCollection($this->transform($resultCollection));
     }
