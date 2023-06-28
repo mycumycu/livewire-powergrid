@@ -184,6 +184,7 @@ class PowerGridComponent extends Component
 
     public function updatedSearch(): void
     {
+        $this->persistState('seach');
         $this->gotoPage(1);
     }
 

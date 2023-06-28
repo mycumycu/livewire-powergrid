@@ -19,12 +19,16 @@ trait PersistData
         }
         if (in_array('filters', $this->persist) || $tableItem === 'filters') {
             $state['filters']        = $this->filters;
+            $state['filtersHandledExternally'] = $this->filtersHandledExternally;
             $state['enabledFilters'] = $this->enabledFilters;
+        }
+        if (in_array('search', $this->persist) || $tableItem === 'search') {
+            $state['search']                  = $this->search;
         }
 
         if (!empty($this->persist)) {
             $url  = parse_url(strval(filter_input(INPUT_SERVER, 'HTTP_REFERER')));
-            $path = $url && array_key_exists('path', $url) ? $url['path'] : '/';
+            $path = ($url && array_key_exists('path', $url) && !empty($url['path'])) ? $url['path'] : '/';
             setcookie('pg:' . $this->tableName, strval(json_encode($state)), now()->addYear()->unix(), $path);
         }
     }
@@ -52,9 +56,14 @@ trait PersistData
             })->toArray();
         }
 
-        if (in_array('filters', $this->persist) && array_key_exists('filters', $state)) {
+        if (in_array('filters', $this->persist) && (array_key_exists('filters', $state) || array_key_exists('filtersHandledExternally', $state) )) {
             $this->filters        = $state['filters'];
+            $this->filtersHandledExternally = $state['filtersHandledExternally'];
             $this->enabledFilters = $state['enabledFilters'];
+        }
+
+        if (in_array('search', $this->persist) && (array_key_exists('search', $state))) {
+            $this->search = $state['search'];
         }
     }
 
