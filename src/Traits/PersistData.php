@@ -56,10 +56,14 @@ trait PersistData
             })->toArray();
         }
 
-        if (in_array('filters', $this->persist) && (array_key_exists('filters', $state) || array_key_exists('filtersHandledExternally', $state) )) {
+        if (in_array('filters', $this->persist) && array_key_exists('filters', $state)) {
             $this->filters        = $state['filters'];
-            $this->filtersHandledExternally = $state['filtersHandledExternally'];
             $this->enabledFilters = $state['enabledFilters'];
+        }
+
+        if (in_array('filters', $this->persist) && array_key_exists('filtersHandledExternally', $state)) {
+            $this->filtersHandledExternally = $state['filtersHandledExternally'];
+            $this->enabledFilters           = $state['enabledFilters'];
         }
 
         if (in_array('search', $this->persist) && (array_key_exists('search', $state))) {
