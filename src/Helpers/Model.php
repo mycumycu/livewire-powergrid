@@ -71,10 +71,6 @@ class Model implements ModelFilterInterface
                 foreach ($type as $field => $value) {
                     switch ($key) {
                         case 'datetime':
-                            $this->filterDateTimePicker($query, $field, $value);
-
-                            break;
-                        case 'date':
                             $this->filterDatePicker($query, $field, $value);
 
                             break;
@@ -111,22 +107,33 @@ class Model implements ModelFilterInterface
         return $this->query;
     }
 
-    public function filterDateTimePicker(Builder $query, string $field, array $value): void
+    public function filterDatePicker(Builder $query, string $field, array|string $value): void
     {
-        if (isset($value[0]) && isset($value[1])) {
-            $query->whereBetween($field, [Carbon::parse($value[0]), Carbon::parse($value[1])]);
+        if (is_array($value)) {
+            $field = $field . '.' . key($value);
+            $value = explode(
+                separator: 'to',
+                string:    $value[key($value)]
+            );
+        }
+        else {
+            $value = explode(
+                separator: 'to',
+                string:    $value
+            );
+        }
+
+
+        if (count($value) === 1) {
+            // same start and end date
+            $query->whereBetween($field, [Carbon::parse($value[0])->startOfDay(), Carbon::parse($value[0])->endOfDay()]);
+        }
+        if (count($value) === 2) {
+            // different start and end dates
+            $query->whereBetween($field, [Carbon::parse($value[0])->startOfDay(), Carbon::parse($value[1])->endOfDay()]);
         }
     }
 
-    public function filterDatePicker(Builder $query, string $field, array $value): void
-    {
-        [$startDate, $endDate] = [
-            0 => Carbon::parse($value[0])->format('Y-m-d'),
-            1 => Carbon::parse($value[1])->format('Y-m-d'),
-        ];
-
-        $query->whereBetween($field, [$startDate, $endDate]);
-    }
 
     public function filterMultiSelect(Builder $query, string $field, array $values): void
     {
