@@ -351,20 +351,23 @@ class Collection implements CollectionFilterInterface
             $this->query = $this->query->filter(function ($row) {
                 $row     = (object) $row;
 
-                foreach ($this->columns as $column) {
-                    if ($column->searchable) {
-                        if (filled($column->dataField)) {
-                            $field = $column->dataField;
-                        } else {
-                            $field = $column->field;
-                        }
-
-                        try {
-                            if (Str::contains(strtolower($row->{$field}), strtolower($this->search))) {
-                                return false !== stristr($row->{$field}, strtolower($this->search));
+                $searchSegments = explode(' ', $this->search);
+                foreach ($searchSegments as $searchSegment) {
+                    foreach ($this->columns as $column) {
+                        if ($column->searchable) {
+                            if (filled($column->dataField)) {
+                                $field = $column->dataField;
+                            } else {
+                                $field = $column->field;
                             }
-                        } catch (\Exception $exception) {
-                            throw new \Exception($exception);
+
+                            try {
+                                if (Str::contains(strtolower($row->{$field}), strtolower($searchSegment))) {
+                                    return false !== stristr($row->{$field}, strtolower($searchSegment));
+                                }
+                            } catch (\Exception $exception) {
+                                throw new \Exception($exception);
+                            }
                         }
                     }
                 }
