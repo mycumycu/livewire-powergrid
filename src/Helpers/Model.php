@@ -115,8 +115,7 @@ class Model implements ModelFilterInterface
                 separator: 'to',
                 string:    $value[key($value)]
             );
-        }
-        else {
+        } else {
             $value = explode(
                 separator: 'to',
                 string:    $value
@@ -148,7 +147,7 @@ class Model implements ModelFilterInterface
                 $empty = true;
             }
         }
-        if (!$empty) {
+        if (! $empty) {
             $query->whereIn($field, $values);
         }
     }
@@ -207,7 +206,7 @@ class Model implements ModelFilterInterface
 
                 break;
             case 'contains':
-                $query->where($field, SqlSupport::like($query), '%' . $value . '%');
+                $query->where($field, SqlSupport::like($query), $this->getContainsSearchFormat($value));
 
                 break;
             case 'contains_not':
@@ -256,20 +255,20 @@ class Model implements ModelFilterInterface
      */
     public function filterNumber(Builder $query, string $field, array $value): void
     {
-        if (isset($value['start']) && !isset($value['end'])) {
+        if (isset($value['start']) && ! isset($value['end'])) {
             $start = $value['start'];
             if (isset($this->inputRangeConfig[$field])) {
                 $start = str_replace($this->inputRangeConfig[$field]['thousands'], '', $value['start']);
-                $start = (float) str_replace($this->inputRangeConfig[$field]['decimal'], '.', $start);
+                $start = (float)str_replace($this->inputRangeConfig[$field]['decimal'], '.', $start);
             }
 
             $query->where($field, '>=', $start);
         }
-        if (!isset($value['start']) && isset($value['end'])) {
+        if (! isset($value['start']) && isset($value['end'])) {
             $end = $value['end'];
             if (isset($this->inputRangeConfig[$field])) {
                 $end = str_replace($this->inputRangeConfig[$field]['thousands'], '', $value['end']);
-                $end = (float) str_replace($this->inputRangeConfig[$field]['decimal'], '.', $end);
+                $end = (float)str_replace($this->inputRangeConfig[$field]['decimal'], '.', $end);
             }
 
             $query->where($field, '<=', $end);
@@ -293,9 +292,9 @@ class Model implements ModelFilterInterface
     public function filterContains(): Model
     {
         if ($this->search != '') {
-            $this->query    = $this->query->where(function (Builder $query) {
+            $this->query = $this->query->where(function (Builder $query) {
                 $modelTable = $query->getModel()->getTable();
-                $columnList = (array) Cache::remember('powergrid_columns_in_' . $modelTable, 600, function () use ($modelTable) {
+                $columnList = (array)Cache::remember('powergrid_columns_in_' . $modelTable, 600, function () use ($modelTable) {
                     return Schema::getColumnListing($modelTable);
                 });
 
@@ -306,13 +305,13 @@ class Model implements ModelFilterInterface
                     $table             = $modelTable;
                     $field             = strval(data_get($column, 'dataField')) ?: strval(data_get($column, 'field'));
 
-                    if ($searchable && !$handledExternally && $field) {
+                    if ($searchable && ! $handledExternally && $field) {
                         if (str_contains($field, '.')) {
                             $explodeField = Str::of($field)->explode('.');
                             /** @var string $table */
-                            $table        = $explodeField->get(0);
+                            $table = $explodeField->get(0);
                             /** @var string $field */
-                            $field        = $explodeField->get(1);
+                            $field = $explodeField->get(1);
                         }
 
                         $hasColumn = in_array($field, $columnList, true);
@@ -341,7 +340,7 @@ class Model implements ModelFilterInterface
     private function filterRelation(): void
     {
         foreach ($this->relationSearch as $table => $relation) {
-            if (!is_array($relation)) {
+            if (! is_array($relation)) {
                 return;
             }
 
@@ -364,5 +363,30 @@ class Model implements ModelFilterInterface
                 }
             }
         }
+    }
+
+    /**
+     * Generates the search format for a contains search.
+     *
+     * @param mixed $value The value to generate the search format for.
+     *
+     * @return string The search format generated for the contains search.
+     */
+    private function getContainsSearchFormat(string $value): string
+    {
+        $valueString  = Str::of($value);
+        $searchFormat = sprintf('%%%s%%', $value);
+
+        $needles = '*';
+        if ($valueString->startsWith($needles)) {
+            $value        = $valueString->replaceFirst($needles, '');
+            $searchFormat = sprintf('%%%s', $value);
+        }
+        if ($valueString->endsWith($needles)) {
+            $value        = $valueString->replaceLast($needles, '');
+            $searchFormat = sprintf('%s%%', $value);
+        }
+
+        return $searchFormat;
     }
 }
